@@ -1,5 +1,6 @@
 import {documentReady} from 'https://unpkg.com/html-ready';
 import {BrowserQRCodeSvgWriter} from 'https://unpkg.com/@zxing/library?module';
+import {Temporal} from 'https://unpkg.com/temporal-polyfill?module';
 
 documentReady.then(() => {
   const summary  = document.querySelector('#summary');
@@ -15,17 +16,21 @@ documentReady.then(() => {
 
   generateCode();
 
-  function iso8601(input) {
-    const date = new Date(input);
-    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    const hours = String(date.getUTCHours()).padStart(2, '0');
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  function format(input) {
+    const {timeZone} = Intl.DateTimeFormat().resolvedOptions();
+    const zdt = Temporal.PlainDateTime.from(input).toZonedDateTime(timeZone);
 
-    return `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
+    function padLeftWithZero(input) {
+      return String(input).padStart(2, '0');
+    }
+
+    const month = padLeftWithZero(zdt.month);
+    const day = padLeftWithZero(zdt.day);
+    const hour = padLeftWithZero(zdt.hour);
+    const minute = padLeftWithZero(zdt.minute);
+    const second = padLeftWithZero(zdt.second);
+
+    return `${zdt.year}${month}${day}T${hour}${minute}${second}Z`;
   }
 
   function generateString() {
@@ -38,11 +43,11 @@ documentReady.then(() => {
     }
 
     if (start.value) {
-      params.push(`DTSTART:${iso8601(start.value)}`);
+      params.push(`DTSTART:${format(start.value)}`);
     }
 
     if (end.value) {
-      params.push(`DTEND:${iso8601(end.value)}`);
+      params.push(`DTEND:${format(end.value)}`);
     }
 
     params.push('END:VEVENT');
