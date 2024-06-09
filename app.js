@@ -54,9 +54,12 @@ function generateString() {
 }
 
 function generateCode() {
+  const text = generateString();
   const qrcodeWriter = new BrowserQRCodeSvgWriter();
-  const svg = qrcodeWriter.write(generateString(), 256, 256);
+  const svg = qrcodeWriter.write(text, 256, 256);
   svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+  qrcode.alt = text;
   qrcode.src = `data:image/svg+xml,${encodeURIComponent(svg.outerHTML.replaceAll(/\r?\n/g, ''))}`;
 }
 
